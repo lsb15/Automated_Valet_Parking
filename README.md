@@ -23,6 +23,8 @@ Automated Valet Parking is a Python project aimed at implementing an automated p
 2. Run the main script to initiate the automated valet parking process.
 3. Visualize the map, planned route, and parking maneuver using Matplotlib.
 
+
+
 Automated Valet Parking offers a robust solution for automating the parking process, enhancing convenience and safety in parking environments.
 
 *Reference:
