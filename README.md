@@ -2,7 +2,7 @@
 Automated_Parking_Valet (Individual Project)
 
 
-Automated Valet Parking is a Python project aimed at implementing an automated parking system using hybrid A* path planning. The system allows a vehicle to navigate autonomously from a drop-off spot to a designated parking space within a parking lot.
+Automated Valet Parking is a Python project aimed at implementing an automated parking system using hybrid A* path planning. The system allows a vehicle to navigate autonomously from a drop-off spot to a designated parking space.
 
 ## Features:
 - ***Hybrid A* Route Planning**: The project utilizes a hybrid A* algorithm to find the shortest path from the drop-off spot to the parking space while considering the vehicle's kinematics.
