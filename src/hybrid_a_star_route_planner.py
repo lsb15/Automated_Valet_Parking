@@ -7,33 +7,36 @@ import math
 from pose import Pose
 from free_space_map import FreeSpaceMap
 
+# Define a class for representing a node in the search tree
 class Node:
     def __init__(self, pose, cost, steering, parent_node_index):
-        self.pose = pose
-        self.discrete_x = round(pose.x)
-        self.discrete_y = round(pose.y)
-        self.cost = cost
-        self.steering = steering
-        self.parent_node_index = parent_node_index
+        self.pose = pose  # Pose of the node (position and orientation)
+        self.discrete_x = round(pose.x) # Discrete x-coordinate
+        self.discrete_y = round(pose.y) # Discrete y-coordinate
+        self.cost = cost # Cost to reach this node
+        self.steering = steering # Steering angle
+        self.parent_node_index = parent_node_index # Index of the parent node
 
+# Define a class for the hybrid A* route planner
 class HybridAStarRoutePlanner:
     def __init__(self):
-        self.free_space_map: FreeSpaceMap = None
-        self.wheelbase = 2.7
-        steering_degree_inputs = [-40, -20, -10, 0, 10, 20, 40]
-        self.steering_inputs = [math.radians(x) for x in steering_degree_inputs]
-        self.chord_lengths = [1, 2]
-        self.goal_node = None
+        self.free_space_map: FreeSpaceMap = None # Instance of FreeSpaceMap
+        self.wheelbase = 2.7  # Wheelbase of the vehicle
+        steering_degree_inputs = [-40, -20, -10, 0, 10, 20, 40] # Steering angles in degrees
+        self.steering_inputs = [math.radians(x) for x in steering_degree_inputs] # Convert steering angles to radians
+        self.chord_lengths = [1, 2] # Chord lengths for different velocities
+        self.goal_node = None # Goal node for route planning
 
+    # Method to search for a route using hybrid A*
     def search_route(self, free_space_map: FreeSpaceMap, show_process=False):
         self.free_space_map = free_space_map
-        start_pose = self.free_space_map.get_drop_off_spot()
-        goal_pose = self.free_space_map.get_goal_state()
+        start_pose = self.free_space_map.get_drop_off_spot() # Get start pose from the map
+        goal_pose = self.free_space_map.get_goal_state() # Get goal pose from the map
         print(f"Start Hybrid A Star Route Planner (start {start_pose.x, start_pose.y}, end {goal_pose.x, goal_pose.y})")
-        start_node = Node(start_pose, 0, 0, -1)
-        self.goal_node = Node(goal_pose, 0, 0, -1)
-        open_set = {self.free_space_map.get_grid_index(start_node.discrete_x, start_node.discrete_y): start_node}
-        closed_set = {}
+        start_node = Node(start_pose, 0, 0, -1)  # Create start node
+        self.goal_node = Node(goal_pose, 0, 0, -1)  # Create goal node
+        open_set = {self.free_space_map.get_grid_index(start_node.discrete_x, start_node.discrete_y): start_node} # Initialize open set
+        closed_set = {}  # Initialize closed set
 
         while open_set:
             current_node_index = min(
@@ -76,6 +79,7 @@ class HybridAStarRoutePlanner:
         print("Cannot find Route")
         return [], []
 
+     # Method to process the route
     def process_route(self, closed_set):
         rx = [self.goal_node.pose.x]
         ry = [self.goal_node.pose.y]
@@ -87,6 +91,7 @@ class HybridAStarRoutePlanner:
             parent_node = n.parent_node_index
         return rx, ry
 
+    # Method to calculate the next node in the search tree
     def calculate_next_node(self, current, current_node_index, chord_length, steering):
         theta = self.change_radians_range(
             current.pose.theta + chord_length * math.tan(steering) / float(self.wheelbase)
@@ -101,6 +106,7 @@ class HybridAStarRoutePlanner:
             current_node_index,
         )
 
+    # Method to calculate the heuristic cost
     def calculate_heuristic_cost(self, node):
         distance_cost = self.calculate_distance_to_end(node.pose)
         angle_cost = abs(self.change_radians_range(node.pose.theta - self.goal_node.pose.theta)) * 0.1
@@ -109,16 +115,19 @@ class HybridAStarRoutePlanner:
         cost = distance_cost + angle_cost + steering_cost
         return float(cost)
 
+    # Method to calculate the distance to the goal
     def calculate_distance_to_end(self, pose):
         distance = math.sqrt(
             (pose.x - self.goal_node.pose.x) ** 2 + (pose.y - self.goal_node.pose.y) ** 2
         )
         return distance
 
+    # Method to handle the range of radians (-pi to pi)
     @staticmethod
     def change_radians_range(angle):
         return math.atan2(math.sin(angle), math.cos(angle))
 
+    # Method to plot the process of searching for the route
     def plot_process(self, open_set, closed_set, current_node):
         self.free_space_map.plot_map()
 
