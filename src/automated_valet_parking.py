@@ -10,22 +10,27 @@ class AutomatedValetParking:
         self.parking_planner = ParkingPlanner()
 
     def run(self, drop_off_spot, parking_space, show_process=False):
+        # Set drop-off spot and parking space on the map
         self.free_space_map.set_drop_off_spot(drop_off_spot[0], drop_off_spot[1], drop_off_spot[2])
         self.free_space_map.set_parking_space(parking_space[0], parking_space[1], parking_space[2])
 
+        # Plan parking trajectory
         self.parking_planner.plan(
             self.free_space_map.get_drop_off_spot(),
             self.free_space_map.get_parking_space()
         )
         self.free_space_map.set_goal_state_pose(self.parking_planner.get_goal_pose())
 
+        # Plot map and key points
         self.free_space_map.plot_map()
         plt.plot(drop_off_spot[0], drop_off_spot[1], 'bo', label='Drop-off Spot')
         plt.plot(parking_space[0], parking_space[1], 'ro', label='Parking Space')
         self.free_space_map.plot_route(self.parking_planner.r1_x, self.parking_planner.r1_y)
         self.free_space_map.plot_route(self.parking_planner.r2_x, self.parking_planner.r2_y)
 
+        # Search for the route to the parking space
         rx, ry = self.route_planner.search_route(self.free_space_map, show_process)
+        # Show plot with annotations
         plt.title('Automated Valet Parking')
         plt.legend()
         plt.show()
