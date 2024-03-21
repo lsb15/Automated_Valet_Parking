@@ -1,20 +1,27 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from pose import Pose
+from pose import Pose  # Importing the Pose class from an external module
 
 class ParkingPlanner:
     def __init__(self):
+        # Vehicle parameters
         self.vehicle_width = 2
         self.wheel_base = 2.7
         self.front_overhang = 1.3
         self.rear_overhang = 1.0
         self.vehicle_front_length = self.wheel_base + self.front_overhang
         self.vehicle_length = self.vehicle_front_length + self.rear_overhang
+        
+        # Parking space parameters
         self.parking_space_width = 3
         self.parking_space_length = 6
         self.parking_space_front_length = 5
+
+        # Steering angle and radius calculation
         self.steering_angle = np.radians(40)
         self.r = self.wheel_base / np.tan(self.steering_angle)
+
+        # Initializing variables for key points and circular paths
         self.x_tan = 0
         self.y_tan = 0
         self.x_mid = 0
@@ -29,10 +36,13 @@ class ParkingPlanner:
         self.r2_x = []
         self.r2_y = []
 
+    # Method to get the goal pose after planning
     def get_goal_pose(self):
         return Pose(self.x_turn, self.y_turn, self.theta_turn)
 
+    # Method to plan the parking trajectory
     def plan(self, start_pose: Pose, parking_pose: Pose):
+        # Calculating distances and angles for parking
         c_margin = 0.5
         d_m = np.sqrt(
             (self.r - self.vehicle_width / 2 - c_margin) ** 2 - (self.r - self.parking_space_width / 2) ** 2
@@ -63,6 +73,7 @@ class ParkingPlanner:
             local_r1_center[0] = -local_r1_center[0]
             local_r2_center[0] = -local_r2_center[0]
 
+        # Transforming local coordinates to global coordinates
         self.x_tan = parking_pose.x + local_x_tan * np.cos(self.theta_turn) - local_y_tan * np.sin(self.theta_turn)
         self.y_tan = parking_pose.y + local_x_tan * np.sin(self.theta_turn) + local_y_tan * np.cos(self.theta_turn)
         self.x_mid = parking_pose.x + local_x_mid * np.cos(self.theta_turn) - local_y_mid * np.sin(self.theta_turn)
@@ -70,9 +81,12 @@ class ParkingPlanner:
         self.x_turn = parking_pose.x + local_x_turn * np.cos(self.theta_turn) - local_y_turn * np.sin(self.theta_turn)
         self.y_turn = parking_pose.y + local_x_turn * np.sin(self.theta_turn) + local_y_turn * np.cos(self.theta_turn)
 
+        # Planning circular paths for parking
         self._plan_circle_paths(parking_pose, local_r1_center, local_r2_center)
 
+    # Method to plan circular paths
     def _plan_circle_paths(self, goal_pose, local_r1_center, local_r2_center):
+        # Transforming local circle centers to global coordinates
         self.r1_center = [
             goal_pose.x + local_r1_center[0] * np.cos(self.theta_turn) - local_r1_center[1] * np.sin(self.theta_turn),
             goal_pose.y + local_r1_center[0] * np.sin(self.theta_turn) + local_r1_center[1] * np.cos(self.theta_turn)
@@ -83,6 +97,7 @@ class ParkingPlanner:
             goal_pose.y + local_r2_center[0] * np.sin(self.theta_turn) + local_r2_center[1] * np.cos(self.theta_turn)
         ]
 
+        # Planning circular paths
         self.r1_x, self.r1_y = self._plan_circle_path(
             self.r1_center,
             (self.x_tan, self.y_tan),
@@ -95,7 +110,9 @@ class ParkingPlanner:
             (self.x_turn, self.y_turn),
         )
 
+    # Method to plan a circular path between two points
     def _plan_circle_path(self, center, point1, point2):
+        # Calculating angles between center and points
         angle1 = self._calculate_angle(center, point1)
         angle2 = self._calculate_angle(center, point2)
         if abs(angle1 - angle2) > np.pi:
@@ -110,6 +127,7 @@ class ParkingPlanner:
 
         return x, y
 
+    # Method to calculate angle between two points
     @staticmethod
     def _calculate_angle(center, point):
         angle = np.arctan2(point[1] - center[1], point[0] - center[0])
